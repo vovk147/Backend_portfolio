@@ -5,23 +5,46 @@ const ProjectSchema = new mongoose.Schema({
     type: String, 
     required: true, 
     unique: true, 
-    trim: true 
+    trim: true,
+    index: true // Добавляем индекс для быстрого поиска
+  },
+  // Твоя фирменная фишка: STAGE_1, STAGE_2, STAGE_3
+  stage: { 
+    type: String, 
+    default: 'STAGE_1',
+    enum: ['STAGE_1', 'STAGE_2', 'STAGE_3'] 
   },
   techStack: [{ type: String }],
   mainImage: { type: String, required: true },
   gallery: [{ type: String }],
   links: {
-    github: String,
-    live: String
+    github: { type: String, trim: true },
+    live: { type: String, trim: true }
   },
   isFeatured: { type: Boolean, default: false },
-  // Поле для ручного сортування
   order: { type: Number, default: 0, min: 0 }, 
   translations: {
-    uk: { title: String, description: String, fullCaseStudy: String },
-    en: { title: String, description: String, fullCaseStudy: String },
-    pl: { title: String, description: String, fullCaseStudy: String }
+    uk: { 
+      title: { type: String, required: true }, 
+      description: String, 
+      fullCaseStudy: String 
+    },
+    en: { 
+      title: { type: String, required: true }, 
+      description: String, 
+      fullCaseStudy: String 
+    },
+    pl: { 
+      title: { type: String, required: true }, 
+      description: String, 
+      fullCaseStudy: String 
+    }
   }
-}, { timestamps: true });
+}, { 
+  timestamps: true,
+  // Добавляем виртуальные поля, если понадобится вычислять что-то на лету
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
 
 module.exports = mongoose.model('Project', ProjectSchema);

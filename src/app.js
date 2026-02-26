@@ -13,7 +13,7 @@ const hpp = require('hpp');
 const authRoutes = require('./routes/auth.routes');
 const projectRoutes = require('./routes/project.routes');
 const tagRoutes = require('./routes/tag.routes'); 
-
+const messageRoutes = require('./routes/message.routes');
 // 1. Підключаємо базу даних
 connectDB();
 
@@ -83,6 +83,7 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/tags', tagRoutes);
 app.use('/api/settings', require('./routes/settings.routes'));
 app.use('/api/contact', require('./routes/contact.routes'));
+app.use('/api/messages', messageRoutes);
 
 // Тестовий роут
 app.get('/', (req, res) => {

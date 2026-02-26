@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 
 const SettingsSchema = new mongoose.Schema({
   email: { type: String, required: true },
-  // Змінюємо String на [String], щоб зберігати масив номерів
   phones: [{ type: String }], 
   cvLink: { type: String }, 
   isLookingForWork: { type: Boolean, default: true },
@@ -16,6 +15,11 @@ const SettingsSchema = new mongoose.Schema({
     uk: String,
     en: String,
     pl: String
+  },
+  // 👇 ДОДАЄМО СИСТЕМНУ НОТАТКУ СЮДИ
+  systemNote: {
+    text: { type: String, default: '' },
+    status: { type: String, default: 'План розробки' }
   }
 });
 

@@ -8,8 +8,8 @@ const resolveTags = async (tagsInput) => {
     if (typeof tagsInput === 'string' && tagsInput.trim() === '') return [];
 
     try {
-        const tagNames = Array.isArray(tagsInput) 
-            ? tagsInput 
+        const tagNames = Array.isArray(tagsInput)
+            ? tagsInput
             : tagsInput.split(',').map(t => t.trim()).filter(t => t.length > 0);
 
         if (tagNames.length === 0) return [];
@@ -17,8 +17,8 @@ const resolveTags = async (tagsInput) => {
         const tagIds = [];
         for (const name of tagNames) {
             const tag = await Tag.findOneAndUpdate(
-                { name: name }, 
-                { name: name }, 
+                { name: name },
+                { name: name },
                 { upsert: true, new: true, setDefaultsOnInsert: true }
             );
             tagIds.push(tag._id);
@@ -55,7 +55,7 @@ exports.getAllProjects = async (req, res) => {
         const limit = parseInt(req.query.limit) || 10;
         const featured = req.query.featured;
         let query = {};
-        
+
         if (featured === 'true') query.isFeatured = true;
         if (req.query.tag && req.query.tag !== 'ALL') {
             const tagDoc = await Tag.findOne({ name: new RegExp(`^${req.query.tag}$`, 'i') });
@@ -118,7 +118,7 @@ exports.createProject = async (req, res) => {
         else if (req.body.gallery && Array.isArray(req.body.gallery)) gallery = req.body.gallery;
 
         const tagIds = await resolveTags(tags);
-        
+
         // --- ОСЬ ТУТ БУЛА ПОМИЛКА, ТЕПЕР ВИПРАВЛЕНО ---
         const stackArray = parseTechStack(techStack);
 
@@ -153,17 +153,22 @@ exports.updateProject = async (req, res) => {
 
         if (req.body.translations) updateData.translations = safeParse(req.body.translations);
         if (req.body.links) updateData.links = safeParse(req.body.links);
-        
+
         // --- ВИПРАВЛЕННЯ ДЛЯ UPDATE ---
         if (req.body.techStack) {
             updateData.techStack = parseTechStack(req.body.techStack);
         }
-        
+
         if (req.body.order !== undefined) updateData.order = Number(req.body.order);
         if (req.body.isFeatured !== undefined) updateData.isFeatured = req.body.isFeatured === 'true' || req.body.isFeatured === true;
         if (req.body.stage) updateData.stage = req.body.stage;
 
-        if (req.file) updateData.mainImage = req.file.path;
+        // --- ВИПРАВЛЕННЯ ДЛЯ КАРТИНКИ ---
+        if (req.files && req.files['mainImage']) {
+            updateData.mainImage = req.files['mainImage'][0].path;
+        } else if (req.body.mainImage) {
+            updateData.mainImage = req.body.mainImage;
+        }
         else if (req.body.mainImage) updateData.mainImage = req.body.mainImage;
 
         if (req.body.tags !== undefined) updateData.tags = await resolveTags(req.body.tags);
@@ -183,12 +188,12 @@ exports.updateProject = async (req, res) => {
 
 // 6. DELETE, 7. TOGGLE
 exports.deleteProject = async (req, res) => {
-    try { await Project.findByIdAndDelete(req.params.id); res.json({ message: 'Deleted' }); } 
+    try { await Project.findByIdAndDelete(req.params.id); res.json({ message: 'Deleted' }); }
     catch (e) { res.status(500).json({ message: e.message }); }
 };
 exports.toggleFeatured = async (req, res) => {
-    try { 
-        const p = await Project.findById(req.params.id); 
-        p.isFeatured = !p.isFeatured; await p.save(); res.json(p); 
+    try {
+        const p = await Project.findById(req.params.id);
+        p.isFeatured = !p.isFeatured; await p.save(); res.json(p);
     } catch (e) { res.status(500).json({ message: e.message }); }
 };

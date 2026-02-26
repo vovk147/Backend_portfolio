@@ -16,11 +16,12 @@ exports.loginUser = async (req, res) => {
       // 1. Геруємо токен (він і в куки запишеться, і повернеться нам у змінну)
       const token = generateToken(res, user._id);
 
-      // 2. Відправляємо JSON разом із токеном
+      // 2. Відправляємо JSON разом із токеном ТА ІМ'ЯМ
       res.json({
         _id: user._id,
+        name: user.name, // <--- ДОДАЛИ ІМ'Я СЮДИ
         email: user.email,
-        token: token, // <--- ЦЕЙ РЯДОК ВИРІШУЄ ВСЕ
+        token: token, 
       });
       
     } else {
@@ -43,19 +44,23 @@ exports.logoutUser = (req, res) => {
 
 // @desc    Реєстрація (якщо треба створити нового адміна)
 exports.registerUser = async (req, res) => {
-  const { email, password } = req.body;
+  // Додали name сюди, щоб можна було передати ім'я при створенні (наприклад "Влад")
+  const { name, email, password } = req.body; 
+  
   try {
     const userExists = await User.findOne({ email });
     if (userExists) return res.status(400).json({ message: 'Користувач вже існує' });
 
-    const user = await User.create({ email, password });
+    // Передаємо name у базу даних
+    const user = await User.create({ name: name || 'Admin', email, password });
 
     if (user) {
       const token = generateToken(res, user._id);
       res.status(201).json({
         _id: user._id,
+        name: user.name, // <--- ТУТ ТАКОЖ ДОДАЄМО
         email: user.email,
-        token: token, // <--- ТУТ ТАКОЖ ДОДАЄМО
+        token: token,
         message: "Адміністратора створено успішно!"
       });
     }

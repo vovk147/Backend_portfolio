@@ -3,6 +3,7 @@ const Tag = require('../models/Tag');
 const slugify = require('slugify');
 
 // --- HELPER 1: ОБРОБКА ТЕГІВ ---
+// --- HELPER 1: ОБРОБКА ТЕГІВ (ВИПРАВЛЕНА ЛОГІКА) ---
 const resolveTags = async (tagsInput) => {
     if (!tagsInput) return [];
     if (typeof tagsInput === 'string' && tagsInput.trim() === '') return [];
@@ -16,11 +17,14 @@ const resolveTags = async (tagsInput) => {
 
         const tagIds = [];
         for (const name of tagNames) {
-            const tag = await Tag.findOneAndUpdate(
-                { name: name },
-                { name: name },
-                { upsert: true, new: true, setDefaultsOnInsert: true }
-            );
+            // 1. Шукаємо існуючий тег (ігноруючи великі/малі літери)
+            let tag = await Tag.findOne({ name: new RegExp(`^${name}$`, 'i') });
+
+            // 2. Якщо тегу немає - створюємо його ПРАВИЛЬНО через .save()
+            if (!tag) {
+                tag = new Tag({ name: name });
+                await tag.save(); // 👈 ТЕПЕР ТУТ СПРАЦЮЄ ТВІЙ pre('save') ДЛЯ СЛАГА!
+            }
             tagIds.push(tag._id);
         }
         return tagIds;
@@ -29,7 +33,6 @@ const resolveTags = async (tagsInput) => {
         return [];
     }
 };
-
 // --- HELPER 2: PARSER (Для JSON і рядків) ---
 const safeParse = (input, fallback = {}) => {
     if (typeof input === 'object' && input !== null) return input;
@@ -169,7 +172,7 @@ exports.updateProject = async (req, res) => {
         } else if (req.body.mainImage) {
             updateData.mainImage = req.body.mainImage;
         }
-        else if (req.body.mainImage) updateData.mainImage = req.body.mainImage;
+        else if (req.body.mainImage) updateData.mainImage = req.body.mainImage; // 👈 ЗАЙВИЙ РЯДОК!
 
         if (req.body.tags !== undefined) updateData.tags = await resolveTags(req.body.tags);
 

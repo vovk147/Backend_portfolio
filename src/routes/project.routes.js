@@ -34,5 +34,6 @@ router.patch('/:id',
 
 router.patch('/:id/featured', auth, projectController.toggleFeatured);
 router.delete('/:id', auth, projectController.deleteProject);
+router.get('/slug/:slug', projectController.getProjectBySlug);
 
 module.exports = router;
